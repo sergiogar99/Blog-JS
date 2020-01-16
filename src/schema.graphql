@@ -16,6 +16,9 @@
       removeAutor(name:String!,token:ID!):String
       removeEntrada(name:String!,token:ID!,id:ID!):String
 
+      updateAutor(name:String!,token:ID!,newpassword:String!):Autores
+      updateEntrada(name:String!,token:ID!,id:ID!,fecha:String!,concepto:String!,mensaje:String!):Entradas
+
     }
   
     type Autores{

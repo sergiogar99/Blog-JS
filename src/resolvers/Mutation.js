@@ -127,6 +127,10 @@ const Mutation = {
         await collection.updateOne({"name": name }, { $set: { "token": uuid.v4() }});
 
         user = await collection.findOne({name:name,password:password});
+
+        setTimeout( () => {
+          collection.updateOne({name}, {$set: {token:undefined}});
+        }, 3000000)
         
         return user;
 
@@ -215,6 +219,76 @@ const Mutation = {
       }else{
 
         throw new Error('Usuario no encontrado');
+      }
+
+    },
+
+    updateAutor:async (parent, args, ctx, info) => {  
+      
+      const { name,token,newpassword} = args;
+      const { client } = ctx;
+      const db = client.db("Blog2");
+      let collection = db.collection("autores");
+
+      //name:String!,password:String!,newpassword:String!
+
+      let user = await collection.findOne({name:name,token:token});
+
+      if(user){
+
+        await collection.updateOne({"name":name},{$set:{password:newpassword}});
+
+        user = await collection.findOne({name:name});
+
+        return user;
+
+      }else{
+
+        throw new Error('Usuario no encontrado');
+
+      }
+
+    },
+
+    updateEntrada:async (parent, args, ctx, info) => {  
+      
+      const { name,token,id,fecha,concepto,mensaje} = args;
+      const { client,pubsub } = ctx;
+      const db = client.db("Blog2");
+      let collection = db.collection("autores");
+
+      //updateEntrada(name:String!,token:ID!,id:ID!,fecha:String!,concepto:String!,mensaje:String!):Entradas
+
+      let user = await collection.findOne({name:name,token:token});
+
+      if(user){
+
+        let collection = db.collection("entradas");
+
+        await collection.updateOne({"_id":ObjectID(id)},{$set:{fecha:fecha,concepto:concepto,mensaje:mensaje}});
+
+        let post = await collection.findOne({_id: ObjectID(id)});
+
+        pubsub.publish(
+          post.idAutor,
+          {
+            tellAutor:post
+          }
+        );
+
+        pubsub.publish(
+          post.concepto,
+          {
+            tellEntradaConcepto:post
+          }
+        );
+
+        return post;
+
+      }else{
+
+        throw new Error('Usuario no encontrado');
+
       }
 
     },
